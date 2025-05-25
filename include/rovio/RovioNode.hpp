@@ -339,6 +339,7 @@ class RovioNode{
    *  @todo debug with   doVECalibration = false and depthType = 0
    */
   void makeTest(){
+    std::cout << "GOT IMAGE MASK PATH:\n" << mpImgUpdate_->imageMaskPath_ << std::endl;
     mtFilterState* mpTestFilterState = new mtFilterState();
     *mpTestFilterState = mpFilter_->init_;
     mpTestFilterState->setCamera(&mpFilter_->multiCamera_);
@@ -508,7 +509,7 @@ class RovioNode{
     cv_ptr->image.copyTo(cv_img);
     if(init_state_.isInitialized() && !cv_img.empty()){
       double msgTime = img->header.stamp.toSec();
-      if(msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_){
+      if(msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_){  // check against last processed image time
         for(int i=0;i<mtState::nCam_;i++){
           if(imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[i]){
             std::cout << "    \033[31mFailed Synchronization of Camera Frames, t = " << msgTime << "\033[0m" << std::endl;

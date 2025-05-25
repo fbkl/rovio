@@ -131,19 +131,35 @@ class ImagePyramid{
   /** \brief Extract FastCorner coordinates
    *
    * @param candidates         - List of the extracted corner coordinates (defined on pyramid level 0).
+  *  @param masks              - Pointer to first element of a fixed size array containing image masks applied to corner detection.
    * @param l                  - Pyramid level at which the corners should be extracted.
    * @param detectionThreshold - Detection threshold of the used cv::FastFeatureDetector.
    *                             See http://docs.opencv.org/trunk/df/d74/classcv_1_1FastFeatureDetector.html
    * @param valid_radius       - Radius inside which a feature is considered valid (as ratio of shortest image side)
    */
-  void detectFastCorners(FeatureCoordinatesVec & candidates, int l, int detectionThreshold, double valid_radius = std::numeric_limits<double>::max()) const{
+  void detectFastCorners(FeatureCoordinatesVec & candidates, const cv::Mat* masks, int l, int detectionThreshold,
+    double valid_radius = std::numeric_limits<double>::max()) const{
     std::vector<cv::KeyPoint> keypoints;
 #if (CV_MAJOR_VERSION < 3)
     cv::FastFeatureDetector feature_detector_fast(detectionThreshold, true);
-    feature_detector_fast.detect(imgs_[l], keypoints);
+    if (!masks[l].empty()) {
+      if (masks[l].cols != imgs_[l].cols || masks[l].rows != imgs_[l].rows) {
+        throw std::invalid_argument("Mask size and image size do not match for level " + std::to_string(l));
+      }
+      feature_detector_fast.detect(imgs_[l], keypoints, masks[l]);
+    } else {
+      feature_detector_fast.detect(imgs_[l], keypoints);
+    }
 #else
     auto feature_detector_fast = cv::FastFeatureDetector::create(detectionThreshold, true);
-    feature_detector_fast->detect(imgs_[l], keypoints);
+    if (!masks[l].empty()) {
+      if (masks[l].cols != imgs_[l].cols || masks[l].rows != imgs_[l].rows) {
+        throw std::invalid_argument("Mask size and image size do not match for level " + std::to_string(l));
+      }
+      feature_detector_fast->detect(imgs_[l], keypoints, masks[l]);
+    } else {
+      feature_detector_fast->detect(imgs_[l], keypoints);
+    }
 #endif
 
     candidates.reserve(candidates.size()+keypoints.size());
@@ -162,6 +178,49 @@ class ImagePyramid{
     }
   }
 };
+
+  template <int n_levels>
+  class ImagePyramidMask {
+  public:
+    ImagePyramidMask() = default;
+    virtual ~ImagePyramidMask() = default;
+    cv::Mat masks_[n_levels]; /**<Array, contains mask for all levels of pyramid.*/
+
+    void computeFromMask(const cv::Mat& mask, const bool useCv = false) {
+      if (mask.empty()) {
+        std::cout << "\033[31m Passed invalid image mask\033[0m" << std::endl;
+        return;
+      }
+      mask.copyTo(masks_[0]);
+
+      for (int i=1; i<n_levels; ++i) {
+        if (!useCv) {
+          halfSample(masks_[i-1],masks_[i]);
+        } else {
+        cv::Size down_sampled_mask_size = cv::Size(masks_[i-1].cols /2 , masks_[i-1].rows /2);
+        cv::pyrDown(masks_[i-1], masks_[i], down_sampled_mask_size, cv::INTER_NEAREST);
+        }
+      }
+    }
+
+    bool computeFromMask(const std::string& image_path) {
+      if (image_path.empty()) {
+        std::cout << "\033[31mImage path for mask is empty.\033[0m" << std::endl;
+        return false;
+      }
+      cv::Mat mask = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
+      if (!mask.empty()) {
+        std::cout << "Successfully loaded image mask from path: " << image_path << std::endl;
+        computeFromMask(image_path);
+        return true;
+      }
+
+      std::cout << "\033[31mCould not load image mask from path: " << image_path << std::endl;
+      return false;
+
+    }
+
+  };
 
 }
 

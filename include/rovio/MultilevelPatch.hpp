@@ -186,10 +186,17 @@ class MultilevelPatch{
    * @param mpWarp      - Affine warping matrix. If nullptr not warping is considered.
    * @param withBorder  - If true, the check is executed with the expanded patch dimensions (incorporates the general patch dimensions).
    *                      If false, the check is only executed with the general patch dimensions.
+   * @param masks       - Optional masks for each layer within which patch is considered out of frame
+
    */
-  static bool isMultilevelPatchInFrame(const ImagePyramid<nLevels>& pyr,const FeatureCoordinates& c, const int l = nLevels-1,const bool withBorder = false){
+  static bool isMultilevelPatchInFrame(const ImagePyramid<nLevels>& pyr,const FeatureCoordinates& c, const int l = nLevels-1,const bool withBorder = false,
+    const cv::Mat* masks = nullptr){
     if(!c.isInFront() || !c.com_warp_c()) return false;
     const auto coorTemp = pyr.levelTranformCoordinates(c,0,l);
+    if (masks != nullptr && !masks[l].empty()) {
+      return Patch<patchSize>::isPatchInFrame(pyr.imgs_[l], coorTemp, withBorder, &masks[l]);
+    }
+
     return Patch<patchSize>::isPatchInFrame(pyr.imgs_[l],coorTemp,withBorder);
   }
 

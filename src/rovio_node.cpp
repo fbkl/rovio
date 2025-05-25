@@ -101,10 +101,13 @@ int main(int argc, char** argv){
 
   // Force the camera calibration paths to the ones from ROS parameters.
   for (unsigned int camID = 0; camID < nCam_; ++camID) {
-    std::string camera_config;
+    std::string camera_config,  image_mask_path;
     if (nh_private.getParam("camera" + std::to_string(camID)
                             + "_config", camera_config)) {
       mpFilter->cameraCalibrationFile_[camID] = camera_config;
+    }
+    if (nh_private.getParam("image_mask_path", image_mask_path)) {
+      std::get<0>(mpFilter->mUpdates_).imageMaskPath_ = image_mask_path;
     }
   }
   mpFilter->refreshProperties();

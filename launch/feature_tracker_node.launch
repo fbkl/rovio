@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<launch>
+    <node pkg="rovio" type="feature_tracker_node" name="rovio_feature_tracker" output="screen">
+        <remap from="/cam0/image_raw" to="/quail/cam0/image_raw" />
+        <param name="image_mask_path" value="/test/test/tes" />
+    </node>
+</launch>
