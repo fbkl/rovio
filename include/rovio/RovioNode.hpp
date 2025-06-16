@@ -349,6 +349,8 @@ class RovioNode{
     predictionMeas_.setRandom(s);
     imgUpdateMeas_.setRandom(s);
 
+    mpImgUpdate_->setImageMask();
+
     LWF::NormalVectorElement tempNor;
     for(int i=0;i<mtState::nMax_;i++){
       testState.CfP(i).camID_ = 0;

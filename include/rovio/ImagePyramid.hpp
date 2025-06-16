@@ -211,7 +211,7 @@ class ImagePyramid{
       cv::Mat mask = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
       if (!mask.empty()) {
         std::cout << "Successfully loaded image mask from path: " << image_path << std::endl;
-        computeFromMask(image_path);
+        computeFromMask(mask);
         return true;
       }
 

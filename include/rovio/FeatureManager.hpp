@@ -292,14 +292,11 @@ class FeatureSetManager{
     float maxScore = -1.0;
     for(int i=0;i<candidates.size();i++){
       multilevelPatches.emplace_back();
-      std::cout << "checking if is in multilevel patch" << std::endl;
       if(multilevelPatches.back().isMultilevelPatchInFrame(pyr,candidates[i],l2,true)){
-        std::cout << "multilevel patch is in multilevel patch" << std::endl;
         multilevelPatches.back().extractMultilevelPatchFromImage(pyr,candidates[i],l2,true);
         multilevelPatches.back().computeMultilevelShiTomasiScore(l1,l2);
         if(multilevelPatches.back().s_ > maxScore) maxScore = multilevelPatches.back().s_;
       } else {
-        std::cout << "NOOOOT multilevel patch is in multilevel patch" << std::endl;
         multilevelPatches.back().s_ = -1;
       }
     }

@@ -405,6 +405,21 @@ ImgOutlierDetection<typename FILTERSTATE::mtState>,false>{
     transformFeatureOutputCT_.mpMultiCamera_ = mpMultiCamera;
   }
 
+  void setImageMask()
+  {
+    if (!imageMaskPath_.empty())
+    {
+      std::cout << "LOADING IMAGE MASK" << std::endl;
+      if (!pyrMask_.computeFromMask(imageMaskPath_))
+      {
+        throw std::runtime_error("Failed to load image mask from: " + imageMaskPath_);
+      }
+    } else
+    {
+      std::cout << "No image mask loaded." << std::endl;
+    }
+  }
+
   /** \brief Sets the innovation term.
    *
    *  \note If \ref useDirectMethod_ is set true, the innovation term is based directly on pixel intensity errors.
