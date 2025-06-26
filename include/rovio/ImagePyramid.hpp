@@ -209,9 +209,22 @@ class ImagePyramid{
         return false;
       }
       cv::Mat mask = cv::imread(image_path, cv::IMREAD_GRAYSCALE);
+      cv::Mat eroded_mask;
       if (!mask.empty()) {
         std::cout << "Successfully loaded image mask from path: " << image_path << std::endl;
-        computeFromMask(mask);
+
+        int erosion_type = cv::MORPH_RECT;
+        // else if( erosion_elem == 1 ){ erosion_type = cv::MORPH_CROSS; }
+        // else if( erosion_elem == 2) { erosion_type = cv::MORPH_ELLIPSE; }
+        int erosion_size = 8;
+        cv::Mat element = cv::getStructuringElement(erosion_type,
+                             cv::Size( 2*erosion_size + 1, 2*erosion_size+1 ),
+                             cv::Point( erosion_size, erosion_size ));
+        cv::erode(mask, eroded_mask, element);
+        // cv::namedWindow("eroded_mask", cv::WINDOW_AUTOSIZE);
+        // cv::imshow("eroded_mask", eroded_mask);
+        // cv::waitKey(0);
+        computeFromMask(eroded_mask);
         return true;
       }
 
