@@ -191,7 +191,8 @@ class ImagePyramid{
         std::cout << "\033[31m Passed invalid image mask\033[0m" << std::endl;
         return;
       }
-      mask.copyTo(masks_[0]);
+      masks_[0] = mask.clone();
+      //mask.copyTo(masks_[0]);
 
       for (int i=1; i<n_levels; ++i) {
         if (!useCv) {
