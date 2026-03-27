@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 project(rovio)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -march=native -O2")
 set(ROVIO_NMAXFEATURE 25 CACHE STRING "Number of features for ROVIO")
 set(ROVIO_NCAM 1 CACHE STRING "Number of enabled cameras")
 set(ROVIO_NLEVELS 4 CACHE STRING "Number of image leavels for the features")
@@ -11,8 +11,8 @@ add_definitions(-DROVIO_NCAM=${ROVIO_NCAM})
 add_definitions(-DROVIO_NLEVELS=${ROVIO_NLEVELS})
 add_definitions(-DROVIO_PATCHSIZE=${ROVIO_PATCHSIZE})
 add_definitions(-DROVIO_NPOSE=${ROVIO_NPOSE})
-
-add_subdirectory(lightweight_filtering)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+#add_subdirectory(lightweight_filtering)
 
 ##################### Find, include, and compile library #####################
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -69,6 +69,8 @@ find_package(catkin REQUIRED COMPONENTS
 	std_msgs
 	tf
 	rosbag
+	image_transport
+	visualization_msgs
 )
 
 add_service_files(

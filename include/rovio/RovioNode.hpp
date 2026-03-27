@@ -477,6 +477,7 @@ class RovioNode{
    */
   void imgCallback0(const sensor_msgs::ImageConstPtr & img){
     std::lock_guard<std::mutex> lock(m_filter_);
+    //if(mtState::nCam_ == 0) imgCallback(img,0);
     imgCallback(img,0);
   }
 
@@ -497,6 +498,9 @@ class RovioNode{
    */
   void imgCallback(const sensor_msgs::ImageConstPtr & img, const int camID = 0){
     // Get image from msg
+    //if (camID == 0) ROS_INFO("reading camera 0 !!!");
+    //if (camID == 1) ROS_INFO("reading camera 1 !!!");
+    //ROS_INFO_STREAM("	camera. maybe it is 1 and 2 idk..." << mtState::nCam_ );
     cv_bridge::CvImagePtr cv_ptr;
     try {
       cv_ptr = cv_bridge::toCvCopy(img, sensor_msgs::image_encodings::TYPE_8UC1);
@@ -504,27 +508,44 @@ class RovioNode{
       ROS_ERROR("cv_bridge exception: %s", e.what());
       return;
     }
-    cv::Mat cv_img;
-    cv_ptr->image.copyTo(cv_img);
-    if(init_state_.isInitialized() && !cv_img.empty()){
-      double msgTime = img->header.stamp.toSec();
-      if(msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_){
-        for(int i=0;i<mtState::nCam_;i++){
-          if(imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[i]){
-            std::cout << "    \033[31mFailed Synchronization of Camera Frames, t = " << msgTime << "\033[0m" << std::endl;
-          }
-        }
-        imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
-      }
-      imgUpdateMeas_.template get<mtImgMeas::_aux>().pyr_[camID].computeFromImage(cv_img,true);
-      imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[camID] = true;
+    try {
+	    cv::Mat cv_img;
+	    cv_ptr->image.copyTo(cv_img);
+	    if(init_state_.isInitialized() && !cv_img.empty()){
+	      double msgTime = img->header.stamp.toSec();
+	      if(msgTime != imgUpdateMeas_.template get<mtImgMeas::_aux>().imgTime_){
+		for(int i=0;i<mtState::nCam_;i++){
+		  if(imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[i]){
+		    std::cout << "    \033[31mFailed Synchronization of Camera Frames, t = " << msgTime << "\033[0m" << std::endl;
+		  }
+		}
+		imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
+	      }
+	      imgUpdateMeas_.template get<mtImgMeas::_aux>().pyr_[camID].computeFromImage(cv_img,true);
+	      imgUpdateMeas_.template get<mtImgMeas::_aux>().isValidPyr_[camID] = true;
 
-      if(imgUpdateMeas_.template get<mtImgMeas::_aux>().areAllValid()){
-        mpFilter_->template addUpdateMeas<0>(imgUpdateMeas_,msgTime);
-        imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
-        updateAndPublish();
-      }
-    }
+	      if(imgUpdateMeas_.template get<mtImgMeas::_aux>().areAllValid()){
+		mpFilter_->template addUpdateMeas<0>(imgUpdateMeas_,msgTime);
+		imgUpdateMeas_.template get<mtImgMeas::_aux>().reset(msgTime);
+		updateAndPublish();
+	      }
+	    }
+	} catch (const std::exception& e) {
+		ROS_ERROR_STREAM_ONCE("something wrong happened when trying to check" << camID);
+		ROS_ERROR_STREAM_ONCE("std exception " << e.what());
+	} catch (const char* msgErr) {
+		ROS_ERROR_STREAM_ONCE("something wrong happened when trying to check" << camID);
+		ROS_ERROR_STREAM_ONCE("char err " << msgErr);
+
+	} catch (int i) {
+		ROS_ERROR_STREAM_ONCE("something wrong happened when trying to check" << camID);
+		ROS_ERROR_STREAM_ONCE("int err " << i);
+
+	} catch (...) 	{
+		ROS_ERROR_STREAM_ONCE("unknown exception");
+
+		ROS_ERROR_STREAM_ONCE("something wrong happened when trying to check" << camID);
+	}
   }
 
   /** \brief Callback for external groundtruth as TransformStamped
